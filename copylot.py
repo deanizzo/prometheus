@@ -104,11 +104,11 @@ class CoPylot:
         is_debugging = debug
         if sys.platform == 'win32' or sys.platform == 'cygwin':
             if is_debugging:
-                self.pdll = CDLL(cwd + "/solarpilotd.dll")
+                self.pdll = CDLL("C:\\Users\\deani\\OneDrive - UW-Madison\\Solar Research\\solarpilot_dev\\build-solarpilot\\ssc-solarpilot\\solarpilot\\Debug\\solarpilotd.dll")
                 # self.pdll = CDLL("C:\\repositories\\solarpilot\\deploy\\api\\solarpilotd.dll")
                 # self.pdll = CDLL("C:\\Users\\WHamilt2\\Documents\\solarPILOT_build\\build\\ssc\\solarpilot\\Debug\\solarpilotd.dll")
             else:
-                self.pdll = CDLL(cwd + "/solarpilot.dll")
+                self.pdll = CDLL("C:\\Users\\deani\\OneDrive - UW-Madison\\Solar Research\\solarpilot_dev\\build-solarpilot\\ssc-solarpilot\\solarpilot\\Debug\\solarpilotd.dll")
         elif sys.platform == 'darwin':
             self.pdll = CDLL(cwd + "/solarpilot.dylib")  # Never tested
         elif sys.platform.startswith('linux'):
@@ -191,7 +191,86 @@ class CoPylot:
 
         self.pdll.sp_disable_callback(c_void_p(p_data))
 
+    def get_heliostat_image_sizes(self, p_data: int, heliostat_id: int) -> dict:
+        """Gets the image sizes (sigx, sigy) for a specific heliostat
+
+        Parameters
+        ----------
+        p_data : int
+            memory address of SolarPILOT instance
+        heliostat_id : int
+            ID of the heliostat
+
+        Returns
+        -------
+        dict
+            Dictionary with keys 'sigx' and 'sigy' (float values), or None if failed
+        """
+
+        count = c_int()
+        self.pdll.sp_get_heliostat_image_sizes.restype = POINTER(c_number)
+        self.pdll.sp_get_heliostat_image_sizes.argtypes = [
+            c_void_p,        # p_data
+            c_int,           # heliostat_id
+            POINTER(c_int)   # count
+        ]
+        
+        parr = self.pdll.sp_get_heliostat_image_sizes(c_void_p(p_data), heliostat_id, byref(count))
+
+        if not parr or count.value != 2:
+            print(f"Failed to get image sizes for heliostat {heliostat_id}")
+            return None
+        
+        print(f"Heliostat {heliostat_id}: sigx={parr[0]}, sigy={parr[1]}")
+
+        result = [float(parr[0]), float(parr[1])]
+
+        return result
+
+
+    def get_heliostat_fluxmap(self, p_data: int, heliostat_id: int) -> list:
+        """Gets a dictionary of heliostat fluxmaps
+
+        Parameters
+        ----------
+        p_data : int
+            memory address of SolarPILOT instance
+
+        Returns
+        -------
+        dict
+            Key: heliostat ID (int) \n
+            Value: fluxmap (2D list of float)
+        """
+
+        nrows = c_int()
+        ncols = c_int()
+        self.pdll.sp_get_heliostat_fluxmap.restype = POINTER(c_number)
+        self.pdll.sp_get_heliostat_fluxmap.argtypes = [
+        c_void_p,  # p_data
+        c_int,     # heliostat_id
+        POINTER(c_int),  # nrows
+        POINTER(c_int),  # ncols
+        c_int      # rec_id
+    ]
+        parr = self.pdll.sp_get_heliostat_fluxmap(c_void_p(p_data), heliostat_id, byref(nrows), byref(ncols), -1)
+
+        if not parr:
+            print(f"Failed to get flux for heliostat {heliostat_id}")
+            return None
+    
+        print(f"Heliostat {heliostat_id}: {nrows.value} x {ncols.value}")
+
+        fluxmap = []
+        for r in range(nrows.value):
+            row = []
+            for c in range(ncols.value):
+                row.append(float(parr[nrows.value * r + c]))
+            fluxmap.append(row)
+
+        return fluxmap
     #SPEXPORT bool sp_set_number(sp_data_t p_data, const char* name, sp_number_t v);
+    
     def data_set_number(self, p_data: int, name: str, value) -> bool:
         """Sets a SolarPILOT numerical variable, used for float, int, bool, and numerical combo options.
 

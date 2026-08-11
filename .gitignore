@@ -39,3 +39,6 @@ Thumbs.db
 
 # Logs
 *.log
+outputs/*
+data_dynamic/*
+!data_dynamic/ideal_flux.csv
