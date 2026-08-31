@@ -68,7 +68,7 @@ class HeliostatFluxOptimizer:
             csv_path = "./data_dynamic/ideal_flux.csv"
             heliostat_csv_path = "./data_dynamic/heliostat_dyn.csv"
             solution_csv_path = None
-            scale_factor = 1e3
+            scale_factor = 1.6e3
         else:
             raise ValueError(f"Unknown problem: {problem_name}")
             

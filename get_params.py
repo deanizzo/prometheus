@@ -1,31 +1,32 @@
 import numpy as np
 import pandas as pd
+from config import cfg
 
 # Field Variables
-receiver_diameter = 17.65  # Diameter of the receiver in meters
-receiver_height = 21.6  # Height of the receiver in meters
-tower_height = 200  # Height of the tower in meters
-rated_power = 565  # Rated power of the system in Megawatts
-time_of_day = 12  # Time of day in hours (0-23)
+receiver_diameter = cfg.field.receiver_diameter  # Diameter of the receiver in meters
+receiver_height = cfg.field.receiver_height  # Height of the receiver in meters
+tower_height = cfg.field.tower_height  # Height of the tower in meters
+rated_power = cfg.field.rated_power  # Rated power of the system in Megawatts
+time_of_day = cfg.field.time_of_day  # Time of day in hours (0-23)
 
 # Simulation Variables
-min_rays = 100000
-x_res = 50
-y_res = 50
+min_rays = cfg.sim.min_rays
+x_res = cfg.sim.x_res
+y_res = cfg.sim.y_res
 
 # CSV Variables
-ideal_flux_csv = "ideal_flux.csv"
-dynamic_csv = "heliostat_dyn.csv"
-
-receiver_radius = receiver_diameter / 2  # Radius of the receiver in meters
-receiver_circumference = 2 * np.pi * receiver_radius  # Circumference of the receiver in meters
+ideal_flux_csv = cfg.csv.ideal_flux_csv
+dynamic_csv = cfg.csv.dynamic_csv
+weather_csv = cfg.csv.weather_csv
+receiver_radius = cfg.field.receiver_radius  # Radius of the receiver in meters
+receiver_circumference = cfg.field.receiver_circumference  # Circumference of the receiver in meters
 
 # Simulate
 # --- Setup CoPylot ---
 from copylot import CoPylot
 cp = CoPylot(debug=False)
 r = cp.data_create()
-cp.data_set_string(r, "ambient.0.weather_file", "./climate_files/USA CA Daggett (TMY2).csv")
+cp.data_set_string(r, "ambient.0.weather_file", weather_csv)
 cp.data_set_number(r, "fluxsim.0.x_res", x_res)
 cp.data_set_number(r, "fluxsim.0.y_res", y_res)
 cp.data_set_number(r, "fluxsim.0.flux_hour", time_of_day)

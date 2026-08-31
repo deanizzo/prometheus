@@ -6,10 +6,10 @@ from optimization.opt_model import HeliostatFluxOptimizer
 import numpy as np
 import jax.numpy as jnp
 import pandas as pd
+from config import cfg
 
-receiver_radius = 8.825  # meters
-receiver_height = 21.6  # meters
-
+receiver_radius = cfg.field.receiver_radius  # meters
+receiver_height = cfg.field.receiver_height  # meters
 
 problem_name = "ideal_cylinder"
 model = HeliostatFluxOptimizer(
@@ -57,7 +57,7 @@ x_best, final_mse, cluster_abr_opt = model.optimize_mma(
     n_st=1,
     fTolerance=1e-4,
     gTolerance=1e-2,
-    maxIterations=15,
+    maxIterations=20,
     minIterations=5,
     timeLimitSecs=3600,
     move_limit=0.2,

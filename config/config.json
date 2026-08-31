@@ -1,0 +1,21 @@
+{
+  "field_variables": {
+    "receiver_diameter": 17.65,
+    "receiver_height": 21.6,
+    "tower_height": 170,
+    "rated_power": 220,
+    "time_of_day": 11.82
+  },
+
+  "simulation_variables": {
+    "min_rays": 100000,
+    "x_res": 54,
+    "y_res": 54
+  },
+
+  "csv_variables": {
+    "ideal_flux_csv": "ideal_flux.csv",
+    "dynamic_csv": "heliostat_dyn.csv",
+    "weather_csv": "./climate_files/USA CA Daggett (TMY2).csv"
+  }
+}

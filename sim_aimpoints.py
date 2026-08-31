@@ -7,14 +7,15 @@ import os
 import numpy as np
 import pandas as pd
 import random
+from config import cfg
 
-receiver_diameter = 17.65  # Diameter of the receiver in meters
-receiver_height = 21.6  # Height of the receiver in meters
-tower_height = 200  # Height of the tower in meters
-rated_power = 565  # Rated power of the system in Megawatts
-x_res = 48
-y_res = 61
-time_of_day = 12  # Time of day in hours (0-23)
+receiver_diameter = cfg.field.receiver_diameter  # Diameter of the receiver in meters
+receiver_height = cfg.field.receiver_height  # Height of the receiver in meters
+tower_height = cfg.field.tower_height  # Height of the tower in meters
+rated_power = cfg.field.rated_power  # Rated power of the system in Megawatts
+x_res = cfg.sim.x_res
+y_res = cfg.sim.y_res
+time_of_day = cfg.field.time_of_day  # Time of day in hours (0-23)
 save_flux_map = True  # Save flux map as PNG
     
 # Import Aimpoints
@@ -80,6 +81,7 @@ id_list = results["id"].values.tolist()
 aim_dict = {"id": id_list, 'aimpoint-x': aimpoint_cart_x, 'aimpoint-y': aimpoint_cart_y, 'aimpoint-z': aimpoint_cart_z}
 
 cp.data_set_string(r, "fluxsim.0.aim_method", "Keep existing")
+#cp.data_set_string(r, "fluxsim.0.aim_method", "Image size priority")
 #cp.modify_heliostats(r, helio_dict)
 cp.modify_heliostats(r, aim_dict)
 cp.simulate(r)
@@ -89,13 +91,18 @@ flux = cp.get_fluxmap(r)
 #assert cp.data_free(r)
 
 if save_flux_map:
-    np.savetxt(f'./outputs/flux_map_{time_of_day}_{rated_power}_{receiver_diameter}x{receiver_height}.csv', flux, delimiter=",", fmt="%.6f")
-    plt.imshow(flux, cmap='viridis', interpolation='nearest', extent=[0, cyl_circumference_half*2, 0, cyl_height])
-    plt.savefig(f'./outputs/flux_map_{time_of_day}_{rated_power}_{receiver_diameter}x{receiver_height}.png')
+    np.savetxt(f'./outputs/flux_map_{time_of_day}_{rated_power}_{receiver_diameter}x{receiver_height}_opt.csv', flux, delimiter=",", fmt="%.6f")
+    plt.imshow(flux, cmap='viridis', interpolation='nearest')
+    plt.colorbar(label='Flux [kW/m²]')
+    plt.title("Raytraced Flux Profile")
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.show()
+    plt.savefig(f'./outputs/flux_map_{time_of_day}_{rated_power}_{receiver_diameter}x{receiver_height}_opt.png')
 else:
-    plt.imshow(flux, cmap='viridis', interpolation='nearest', extent=[0, cyl_circumference_half*2, 0, cyl_height])
-plt.colorbar(label='Flux [kW/m²]')
-plt.title("Raytraced Flux Profile")
-plt.xlabel("x")
-plt.ylabel("y")
-plt.show()
+    plt.imshow(flux, cmap='viridis', interpolation='nearest')
+    plt.colorbar(label='Flux [kW/m²]')
+    plt.title("Raytraced Flux Profile")
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.show()
