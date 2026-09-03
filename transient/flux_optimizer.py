@@ -66,10 +66,10 @@ class HeliostatFluxOptimizerTimeSeries:
         return np.atleast_2d(values)
 
     def _load_data(self, target_flux_path: Path, csv_files: list[Path]):
-        target = jnp.asarray(self._load_csv(target_flux_path) / 1e3)
+        target = jnp.asarray(self._load_csv(target_flux_path) / 1.6e3)
         heliostat_data = [self._load_csv(path, skiprows=1) for path in csv_files]
-        if any(data.shape[1] != 8 for data in heliostat_data):
-            raise ValueError("Heliostat CSV files must contain exactly 8 columns.")
+        if any(data.shape[1] not in [8, 9] for data in heliostat_data):
+            raise ValueError("Heliostat CSV files must contain exactly 8 or 9 columns.")
         count = heliostat_data[0].shape[0]
         if any(data.shape[0] != count for data in heliostat_data):
             raise ValueError("All timestep CSV files must contain the same heliostats.")
@@ -79,7 +79,14 @@ class HeliostatFluxOptimizerTimeSeries:
         stacked = np.stack(heliostat_data)
         self.sigma_x = jnp.asarray(stacked[:, :, 1])
         self.sigma_y = jnp.asarray(stacked[:, :, 2])
-        self.amplitude = jnp.asarray(stacked[:, :, 3])
+        if cloudy := stacked.shape[2] == 9:
+            print("Detected cloudy heliostat CSV format with 9 columns.")
+            self.amplitude = jnp.asarray(stacked[:, :, 8])
+        elif cloudy := stacked.shape[2] == 8:
+            print("Detected clear-sky heliostat CSV format with 8 columns.")
+            self.amplitude = jnp.asarray(stacked[:, :, 3])
+        else:
+            raise ValueError("Heliostat CSV files must contain exactly 8 or 9 columns.")
         self.x_normal = jnp.asarray(stacked[0, :, 6])
         self.y_normal = jnp.asarray(stacked[0, :, 7])
 

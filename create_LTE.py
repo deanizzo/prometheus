@@ -53,8 +53,8 @@ def plot_results(W, H, Npanels, ntubesim, nz, results, label_name, savename='def
     cbr = fig.colorbar(im, cax=cax)
     cbr.set_label(label=label_name, size=cbr_fontsize)
     cbr.ax.tick_params(labelsize=cbr_fontsize)
-    fig.savefig(f'imgs/{savename}',dpi=300)
-    plt.show()
+    fig.savefig(f'{savename}',dpi=300)
+    #plt.show()
     plt.close(fig)
     return 
 ##
@@ -106,7 +106,8 @@ if __name__ == '__main__':
     # model.receiver.aiming_file          ='aiming/demo_informed_spt_method/ideal_fluxgrid_220MWth_0.83AR_270area_maxLTE.csv'
 
     model.receiver.use_aiming_scheme    =0  # use these two lines in tandem if you want to enforce uniform aiming
-    model.receiver.aiming_file          ="outputs\\flux_map_11.82_220_17.65x21.6_opt.csv"
+    #model.receiver.aiming_file          ="C:\\Users\\deani\\OneDrive - UW-Madison\\heliocon\\outputs\\mma\\data\\flux_map_iter_1.csv"
+    #model.receiver.aiming_file          ="C:\\Users\\deani\\OneDrive - UW-Madison\\heliocon\\outputs\\cloudy\\flux_t02.csv"
     #model.receiver.aiming_file = 'None'
     # #
 
@@ -124,34 +125,36 @@ if __name__ == '__main__':
     ## determine number of required panel replacements by solving the model at design point
     model.analysis_mode = 'design_point' #'design_day'  ,- was using this 1/27/25, og comment -># 'design_point', 'design_day', 'three_day' (summer solstice, equinox, winter solstice), 'selected_days', 'user_defined' # was using "selected_days"
     model.analysis_days = [172] # can manually set this but analysis_mode will default set this as well
-    model.solve(verbosity=1)
+    for i in range(40):
+        model.receiver.aiming_file      =f"C:\\Users\\deani\\OneDrive - UW-Madison\\heliocon\\outputs\\mma\\data\\flux_map_iter_{i+1}.csv"
+        model.solve(verbosity=1)
 
-    ## extract thermal points for damage tool
-    dTs_design, Tfs_design, qabs_design, Rs_design =helpers_thermal_model.get_thermal_results(model.receiver)
+        ## extract thermal points for damage tool
+        dTs_design, Tfs_design, qabs_design, Rs_design =helpers_thermal_model.get_thermal_results(model.receiver)
 
-    print(f"max dT = {dTs_design.max():.1f} C at {np.unravel_index(np.argmax(dTs_design), dTs_design.shape)}")
-    print(f"max Tf = {Tfs_design.max():.1f} C at {np.unravel_index(np.argmax(Tfs_design), Tfs_design.shape)}")
-    print(f"min dT = {dTs_design.min():.1f} C at {np.unravel_index(np.argmin(dTs_design), dTs_design.shape)}")
-    print(f"min Tf = {Tfs_design.min():.1f} C at {np.unravel_index(np.argmin(Tfs_design), Tfs_design.shape)}")
+        print(f"max dT = {dTs_design.max():.1f} C at {np.unravel_index(np.argmax(dTs_design), dTs_design.shape)}")
+        print(f"max Tf = {Tfs_design.max():.1f} C at {np.unravel_index(np.argmax(Tfs_design), Tfs_design.shape)}")
+        print(f"min dT = {dTs_design.min():.1f} C at {np.unravel_index(np.argmin(dTs_design), dTs_design.shape)}")
+        print(f"min Tf = {Tfs_design.min():.1f} C at {np.unravel_index(np.argmin(Tfs_design), Tfs_design.shape)}")
 
-    bad = (dTs_design > 300) | (Tfs_design > 575)
-    print(f"out-of-range nodes: {bad.sum()} / {bad.size}")
-    print("first failing locations [axial node, panel, simulated tube]:")
-    print(np.argwhere(bad)[:10])
+        bad = (dTs_design > 300) | (Tfs_design > 575)
+        print(f"out-of-range nodes: {bad.sum()} / {bad.size}")
+        print("first failing locations [axial node, panel, simulated tube]:")
+        print(np.argwhere(bad)[:10])
 
-    ## calculate lifetimes
-    LTEs                            =dmg_obj.get_LTEs(dTs_design.flatten(), Tfs_design.flatten(), Rs_design.flatten())
-    min_panel_LTEs, min_tube_LTEs   =dmg_obj.calc_minimum_panel_LTEs(model.receiver, LTEs)
-    print('minimum panel LTE is:',min_panel_LTEs.min())
+        ## calculate lifetimes
+        LTEs                            =dmg_obj.get_LTEs(dTs_design.flatten(), Tfs_design.flatten(), Rs_design.flatten())
+        min_panel_LTEs, min_tube_LTEs   =dmg_obj.calc_minimum_panel_LTEs(model.receiver, LTEs)
+        print('minimum panel LTE is:',min_panel_LTEs.min())
 
-    # # ## show lifetime profiles and op points if desired
-    dmg_obj.plot_dmg_map(include_ratios=False, op_dTs=dTs_design.flatten(), op_Tfs=Tfs_design.flatten(), savename=f'thermal_points_dmg_map_AR_uni.png' )
-    plot_results(model.receiver.D, model.receiver.H, model.receiver.Npanels, model.receiver.ntubesim, model.receiver.disc.nz, LTEs, 'lifetimes (yrs)', savename=f'LTE_heatmap_{AR:.2f}_spt_demo.png', vmin=0, vmax=100) # use for A617. if you specifically want lifetimes, use 'lifetimes (yrs)' or 'log10(lifetimes (yrs))'
+        # # ## show lifetime profiles and op points if desired
+        dmg_obj.plot_dmg_map(include_ratios=False, op_dTs=dTs_design.flatten(), op_Tfs=Tfs_design.flatten(), savename=f'outputs/mma/LTEs/contours/LTE_contour_{i+1:02d}.png' )
+        plot_results(model.receiver.D, model.receiver.H, model.receiver.Npanels, model.receiver.ntubesim, model.receiver.disc.nz, LTEs, 'lifetimes (yrs)', savename=f'outputs/mma/LTEs/maps/LTE_heatmap_{i+1:02d}.png', vmin=0, vmax=100) # use for A617. if you specifically want lifetimes, use 'lifetimes (yrs)' or 'log10(lifetimes (yrs))'
 
 
-    ## calculate the number of replacements
-    panel_replacements =np.floor(N_life/min_panel_LTEs)
-    N_repl             =np.sum(panel_replacements)
+        ## calculate the number of replacements
+        panel_replacements =np.floor(N_life/min_panel_LTEs)
+        N_repl             =np.sum(panel_replacements)
 
-    ## 
-    print(f'number of required panel replacements over a 30 year lifetime:{N_repl}')
+        ## 
+        print(f'number of required panel replacements over a 30 year lifetime:{N_repl}')

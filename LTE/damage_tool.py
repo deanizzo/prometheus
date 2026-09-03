@@ -156,8 +156,8 @@ class damageTool():
         ax.set_ylabel('fluid temperature (C)',fontsize=fontsize)
         plt.yticks(fontsize=fontsize)
         if savename != None:
-            plt.savefig(fname=f'imgs/{savename}',dpi=300)
-        plt.show()
+            plt.savefig(fname=f'{savename}',dpi=300)
+        #plt.show()
         plt.close()
 
         return
@@ -471,7 +471,8 @@ class damageTool():
         LTEs. This isn't physically true so we want to alert the user.
         """
         if (dTs.max() > self.interp_dT_limits[1]) or (Tfs.max() > self.interp_Tf_limits[1]):
-            raise ValueError('WARNING: a Tf or dT exists that exceeds the range of the data set')
+            print('WARNING: a Tf or dT exists that exceeds the range of the data set')
+            #raise ValueError('WARNING: a Tf or dT exists that exceeds the range of the data set')
         
         return 
 

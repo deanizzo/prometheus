@@ -42,3 +42,5 @@ Thumbs.db
 outputs/*
 data_dynamic/*
 !data_dynamic/ideal_flux.csv
+
+sandbox.py

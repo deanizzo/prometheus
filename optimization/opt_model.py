@@ -410,7 +410,7 @@ class HeliostatFluxOptimizer:
         ax2.tick_params(axis='y', labelcolor='r')
         plt.pause(0.01)
     
-    def create_gif(self, gif_name="flux_opt_evolution.gif", fps=5, hold_last=20):
+    def create_gif(self, gif_name="flux_opt_evolution.gif", fps=5, hold_last=20, save_flux_maps=False):
         """Create animated GIF of optimization evolution"""
         if not self.x_hist:
             print("No history to create GIF.")
@@ -421,21 +421,23 @@ class HeliostatFluxOptimizer:
         for idx, xk in enumerate(self.x_hist):
             cluster_ab_iter = jnp.array(xk.reshape((-1, self.var_column)))
             F_iter = self.total_flux_vectorized(cluster_ab_iter)
-            fig, ax = plt.subplots(figsize=(8, 6), dpi=150)
-            ax.pcolormesh(self.X, self.Y, F_iter, shading='auto', cmap='viridis', vmin=vmin, vmax=vmax)
-            ax.set_xlabel('Circumference [m]')
-            ax.set_ylabel('Height [m]')
-            ax.set_title(f'Flux Optimization Evolution, Iteration {idx+1}')
-            ax.set_aspect('equal')
-            fig.canvas.draw()
-            frame = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-            frame = frame.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-            frames.append(frame)
-            plt.close(fig)
-        if hold_last > 0:
-            for _ in range(hold_last):
-                frames.append(frames[-1])
-        imageio.mimsave(gif_name, frames, fps=fps, loop=0)
+            if save_flux_maps:
+                np.savetxt(f"outputs/mma/data/flux_map_iter_{idx+1}.csv", np.asarray(F_iter), delimiter=",")
+            # fig, ax = plt.subplots(figsize=(8, 6), dpi=150)
+        #     ax.pcolormesh(self.X, self.Y, F_iter, shading='auto', cmap='viridis', vmin=vmin, vmax=vmax)
+        #     ax.set_xlabel('Circumference [m]')
+        #     ax.set_ylabel('Height [m]')
+        #     ax.set_title(f'Flux Optimization Evolution, Iteration {idx+1}')
+        #     ax.set_aspect('equal')
+        #     fig.canvas.draw()
+        #     frame = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+        #     frame = frame.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+        #     frames.append(frame)
+        #     plt.close(fig)
+        # if hold_last > 0:
+        #     for _ in range(hold_last):
+        #         frames.append(frames[-1])
+        # imageio.mimsave(gif_name, frames, fps=fps, loop=0)
         print(f"GIF saved as {gif_name}")
     
     def plot_optimized_vs_target(self, show_heliostat_positions=True):

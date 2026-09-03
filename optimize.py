@@ -57,7 +57,7 @@ x_best, final_mse, cluster_abr_opt = model.optimize_mma(
     n_st=1,
     fTolerance=1e-4,
     gTolerance=1e-2,
-    maxIterations=20,
+    maxIterations=40,
     minIterations=5,
     timeLimitSecs=3600,
     move_limit=0.2,
@@ -66,7 +66,7 @@ x_best, final_mse, cluster_abr_opt = model.optimize_mma(
     getGIF=False
 )
 model.plot_history()
-
+model.create_gif(gif_name="flux_opt_evolution.gif", fps=5, hold_last=20, save_flux_maps=True)
 
 
 print(cluster_abr_opt)
